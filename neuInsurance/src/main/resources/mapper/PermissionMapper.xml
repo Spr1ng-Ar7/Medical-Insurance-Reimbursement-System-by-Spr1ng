@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.PermissionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.Permission">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="permission_code" property="permissionCode" jdbcType="VARCHAR"/>
+        <result column="permission_name" property="permissionName" jdbcType="VARCHAR"/>
+        <result column="resource_type" property="resourceType" jdbcType="VARCHAR"/>
+        <result column="resource_path" property="resourcePath" jdbcType="VARCHAR"/>
+        <result column="http_method" property="httpMethod" jdbcType="VARCHAR"/>
+        <result column="parent_id" property="parentId" jdbcType="BIGINT"/>
+        <result column="level" property="level" jdbcType="INTEGER"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="icon" property="icon" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, permission_code, permission_name, resource_type, resource_path, http_method,
+        parent_id, level, sort_order, icon, status, create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <!-- 查询用户的所有权限 -->
+    <select id="selectUserPermissions" resultMap="BaseResultMap">
+        SELECT DISTINCT p.* 
+        FROM permission p
+        INNER JOIN role_permission rp ON p.id = rp.permission_id
+        INNER JOIN admin_role ar ON rp.role_id = ar.role_id
+        WHERE ar.admin_id = #{userId}
+        AND p.status = 1
+        ORDER BY p.sort_order
+    </select>
+    
+    <!-- 根据ID查询权限 -->
+    <select id="selectPermissionById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission WHERE id = #{id}
+    </select>
+    
+    <!-- 查询所有权限 -->
+    <select id="selectAllPermissions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+    
+    <!-- 查询所有有效权限（用于构建权限树） -->
+    <select id="selectAllValidPermissions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE status = 1
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+    
+    <!-- 根据角色ID查询权限 -->
+    <select id="selectPermissionsByRoleId" parameterType="long" resultMap="BaseResultMap">
+        SELECT p.* 
+        FROM permission p
+        INNER JOIN role_permission rp ON p.id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+        AND p.status = 1
+        ORDER BY p.sort_order
+    </select>
+    
+    <!-- 根据父权限ID查询子权限 -->
+    <select id="selectPermissionsByParentId" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE parent_id = #{parentId}
+        AND status = 1
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+    
+    <!-- 查询根权限（顶级权限） -->
+    <select id="selectRootPermissions" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE (parent_id IS NULL OR parent_id = 0)
+        AND status = 1
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+    
+    <!-- 根据权限编码查询权限 -->
+    <select id="selectPermissionByCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE permission_code = #{permissionCode}
+    </select>
+    
+    <!-- 根据资源路径查询权限 -->
+    <select id="selectPermissionsByResourcePath" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE resource_path = #{resourcePath}
+        AND status = 1
+        ORDER BY sort_order
+    </select>
+    
+    <!-- 根据资源类型查询权限 -->
+    <select id="selectPermissionsByResourceType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM permission 
+        WHERE resource_type = #{resourceType}
+        AND status = 1
+        ORDER BY sort_order
+    </select>
+    
+    <!-- 查询权限的子权限数量 -->
+    <select id="countChildrenByParentId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM permission WHERE parent_id = #{parentId}
+    </select>
+    
+    <!-- 查询权限的层级 -->
+    <select id="getPermissionLevel" parameterType="long" resultType="int">
+        SELECT level FROM permission WHERE id = #{permissionId}
+    </select>
+    
+    <!-- 新增权限 -->
+    <insert id="insertPermission" parameterType="org.neu.insurance.entity.Permission" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO permission (
+            permission_code, permission_name, resource_type, resource_path, http_method,
+            parent_id, level, sort_order, icon, status, create_time, update_time, create_by, update_by, remark
+        ) VALUES (
+            #{permissionCode}, #{permissionName}, #{resourceType}, #{resourcePath}, #{httpMethod},
+            #{parentId}, #{level}, #{sortOrder}, #{icon}, #{status}, NOW(), NOW(), #{createBy}, #{updateBy}, #{remark}
+        )
+    </insert>
+    
+    <!-- 更新权限 -->
+    <update id="updatePermission" parameterType="org.neu.insurance.entity.Permission">
+        UPDATE permission SET
+            permission_code = #{permissionCode},
+            permission_name = #{permissionName},
+            resource_type = #{resourceType},
+            resource_path = #{resourcePath},
+            http_method = #{httpMethod},
+            parent_id = #{parentId},
+            level = #{level},
+            sort_order = #{sortOrder},
+            icon = #{icon},
+            status = #{status},
+            update_time = NOW(),
+            update_by = #{updateBy},
+            remark = #{remark}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除权限 -->
+    <delete id="deletePermissionById" parameterType="long">
+        DELETE FROM permission WHERE id = #{id}
+    </delete>
+    
+    <!-- 批量删除权限 -->
+    <delete id="batchDeletePermissions">
+        DELETE FROM permission WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <!-- 更新权限状态 -->
+    <update id="updatePermissionStatus">
+        UPDATE permission SET status = #{status}, update_time = NOW() WHERE id = #{id}
+    </update>
+    
+    <!-- 检查权限编码是否存在 -->
+    <select id="countByPermissionCode" resultType="int">
+        SELECT COUNT(*) FROM permission 
+        WHERE permission_code = #{permissionCode}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+    
+    <!-- 检查权限路径是否存在 -->
+    <select id="countByResourcePath" resultType="int">
+        SELECT COUNT(*) FROM permission 
+        WHERE resource_path = #{resourcePath}
+        AND http_method = #{httpMethod}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+    
+    <!-- 获取权限的所有子权限ID（递归查询） -->
+    <select id="selectAllChildIds" parameterType="long" resultType="long">
+        WITH RECURSIVE permission_tree AS (
+            SELECT id, parent_id FROM permission WHERE id = #{parentId}
+            UNION ALL
+            SELECT p.id, p.parent_id 
+            FROM permission p
+            INNER JOIN permission_tree pt ON p.parent_id = pt.id
+        )
+        SELECT id FROM permission_tree WHERE id != #{parentId}
+    </select>
+    
+    <!-- 获取权限的所有父权限ID（递归查询） -->
+    <select id="selectAllParentIds" parameterType="long" resultType="long">
+        WITH RECURSIVE permission_tree AS (
+            SELECT id, parent_id FROM permission WHERE id = #{permissionId}
+            UNION ALL
+            SELECT p.id, p.parent_id 
+            FROM permission p
+            INNER JOIN permission_tree pt ON p.id = pt.parent_id
+        )
+        SELECT parent_id FROM permission_tree WHERE parent_id IS NOT NULL AND parent_id != 0
+    </select>
+
+</mapper> 

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.MedicalServiceMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.MedicalService">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="service_code" property="serviceCode" jdbcType="VARCHAR"/>
+        <result column="national_code" property="nationalCode" jdbcType="VARCHAR"/>
+        <result column="service_name" property="serviceName" jdbcType="VARCHAR"/>
+        <result column="service_type" property="serviceType" jdbcType="VARCHAR"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="service_content" property="serviceContent" jdbcType="VARCHAR"/>
+        <result column="exclude_content" property="excludeContent" jdbcType="VARCHAR"/>
+        <result column="unit_type" property="unitType" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+        <result column="reimbursement_ratio" property="reimbursementRatio" jdbcType="DECIMAL"/>
+        <result column="department" property="department" jdbcType="VARCHAR"/>
+        <result column="doctor_level" property="doctorLevel" jdbcType="VARCHAR"/>
+        <result column="reimbursable" property="reimbursable" jdbcType="INTEGER"/>
+        <result column="insurance_category" property="insuranceCategory" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="equipment_type" property="equipmentType" jdbcType="VARCHAR"/>
+        <result column="surgery_level" property="surgeryLevel" jdbcType="VARCHAR"/>
+        <result column="nursing_level" property="nursingLevel" jdbcType="VARCHAR"/>
+        <result column="duration" property="duration" jdbcType="INTEGER"/>
+        <result column="anesthesia_type" property="anesthesiaType" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, service_code, national_code, service_name, service_type, category, service_content, 
+        exclude_content, unit_type, price, reimbursement_ratio, department, doctor_level, 
+        reimbursable, insurance_category, status, create_time, update_time, create_by, update_by, 
+        remark, equipment_type, surgery_level, nursing_level, duration, anesthesia_type
+    </sql>
+
+    <!-- 根据条件分页查询医疗服务列表 -->
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        <where>
+            <if test="serviceType != null and serviceType != ''">
+                AND service_type = #{serviceType}
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (service_name LIKE CONCAT('%', #{keyword}, '%') 
+                OR service_code LIKE CONCAT('%', #{keyword}, '%')
+                OR national_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据条件统计医疗服务总数 -->
+    <select id="countByCondition" resultType="int">
+        SELECT COUNT(*)
+        FROM medical_service
+        <where>
+            <if test="serviceType != null and serviceType != ''">
+                AND service_type = #{serviceType}
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (service_name LIKE CONCAT('%', #{keyword}, '%') 
+                OR service_code LIKE CONCAT('%', #{keyword}, '%')
+                OR national_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询医疗服务 -->
+    <select id="selectById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据服务编码查询医疗服务 -->
+    <select id="selectByServiceCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE service_code = #{serviceCode}
+    </select>
+
+    <!-- 根据国家编码查询医疗服务 -->
+    <select id="selectByNationalCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE national_code = #{nationalCode}
+    </select>
+
+    <!-- 新增医疗服务 -->
+    <insert id="insert" parameterType="org.neu.insurance.entity.MedicalService" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO medical_service (
+            service_code, national_code, service_name, service_type, category, service_content,
+            exclude_content, unit_type, price, reimbursement_ratio, department, doctor_level,
+            reimbursable, insurance_category, status, create_time, update_time, create_by, update_by,
+            remark, equipment_type, surgery_level, nursing_level, duration, anesthesia_type
+        ) VALUES (
+            #{serviceCode}, #{nationalCode}, #{serviceName}, #{serviceType}, #{category}, #{serviceContent},
+            #{excludeContent}, #{unitType}, #{price}, #{reimbursementRatio}, #{department}, #{doctorLevel},
+            #{reimbursable}, #{insuranceCategory}, #{status}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy},
+            #{remark}, #{equipmentType}, #{surgeryLevel}, #{nursingLevel}, #{duration}, #{anesthesiaType}
+        )
+    </insert>
+
+    <!-- 更新医疗服务 -->
+    <update id="update" parameterType="org.neu.insurance.entity.MedicalService">
+        UPDATE medical_service
+        <set>
+            <if test="serviceCode != null">service_code = #{serviceCode},</if>
+            <if test="nationalCode != null">national_code = #{nationalCode},</if>
+            <if test="serviceName != null">service_name = #{serviceName},</if>
+            <if test="serviceType != null">service_type = #{serviceType},</if>
+            <if test="category != null">category = #{category},</if>
+            <if test="serviceContent != null">service_content = #{serviceContent},</if>
+            <if test="excludeContent != null">exclude_content = #{excludeContent},</if>
+            <if test="unitType != null">unit_type = #{unitType},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="reimbursementRatio != null">reimbursement_ratio = #{reimbursementRatio},</if>
+            <if test="department != null">department = #{department},</if>
+            <if test="doctorLevel != null">doctor_level = #{doctorLevel},</if>
+            <if test="reimbursable != null">reimbursable = #{reimbursable},</if>
+            <if test="insuranceCategory != null">insurance_category = #{insuranceCategory},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="equipmentType != null">equipment_type = #{equipmentType},</if>
+            <if test="surgeryLevel != null">surgery_level = #{surgeryLevel},</if>
+            <if test="nursingLevel != null">nursing_level = #{nursingLevel},</if>
+            <if test="duration != null">duration = #{duration},</if>
+            <if test="anesthesiaType != null">anesthesia_type = #{anesthesiaType},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除医疗服务 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM medical_service WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除医疗服务 -->
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM medical_service WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据服务类型查询医疗服务列表 -->
+    <select id="selectByServiceType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE service_type = #{serviceType}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据类别查询医疗服务列表 -->
+    <select id="selectByCategory" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE category = #{category}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据科室查询医疗服务列表 -->
+    <select id="selectByDepartment" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE department = #{department}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据医保分类查询医疗服务列表 -->
+    <select id="selectByInsuranceCategory" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE insurance_category = #{insuranceCategory}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据是否可报销查询医疗服务列表 -->
+    <select id="selectByReimbursable" parameterType="int" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE reimbursable = #{reimbursable}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据价格范围查询医疗服务列表 -->
+    <select id="selectByPriceRange" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE price BETWEEN #{minPrice} AND #{maxPrice}
+        ORDER BY price ASC
+    </select>
+
+    <!-- 根据报销比例范围查询医疗服务列表 -->
+    <select id="selectByReimbursementRatio" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_service
+        WHERE reimbursement_ratio BETWEEN #{minRatio} AND #{maxRatio}
+        ORDER BY reimbursement_ratio DESC
+    </select>
+
+    <!-- 获取所有服务类型 -->
+    <select id="selectAllServiceTypes" resultType="string">
+        SELECT DISTINCT service_type 
+        FROM medical_service 
+        WHERE service_type IS NOT NULL AND service_type != ''
+        ORDER BY service_type
+    </select>
+
+    <!-- 获取所有服务类别 -->
+    <select id="selectAllCategories" resultType="string">
+        SELECT DISTINCT category 
+        FROM medical_service 
+        WHERE category IS NOT NULL AND category != ''
+        ORDER BY category
+    </select>
+
+    <!-- 获取所有科室 -->
+    <select id="selectAllDepartments" resultType="string">
+        SELECT DISTINCT department 
+        FROM medical_service 
+        WHERE department IS NOT NULL AND department != ''
+        ORDER BY department
+    </select>
+
+    <!-- 获取所有医保分类 -->
+    <select id="selectAllInsuranceCategories" resultType="string">
+        SELECT DISTINCT insurance_category 
+        FROM medical_service 
+        WHERE insurance_category IS NOT NULL AND insurance_category != ''
+        ORDER BY insurance_category
+    </select>
+
+    <!-- 检查服务编码是否存在 -->
+    <select id="countByServiceCode" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM medical_service WHERE service_code = #{serviceCode}
+    </select>
+
+    <!-- 检查国家编码是否存在 -->
+    <select id="countByNationalCode" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM medical_service WHERE national_code = #{nationalCode}
+    </select>
+
+</mapper> 

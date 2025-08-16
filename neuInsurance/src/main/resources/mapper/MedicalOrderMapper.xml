@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.MedicalOrderMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="MedicalOrderResultMap" type="org.neu.insurance.entity.MedicalOrder">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="patient_id" property="patientId"/>
+        <result column="patient_name" property="patientName"/>
+        <result column="patient_id_card" property="patientIdCard"/>
+        <result column="hospital_id" property="hospitalId"/>
+        <result column="hospital_name" property="hospitalName"/>
+        <result column="hospital_level" property="hospitalLevel"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="doctor_name" property="doctorName"/>
+        <result column="department_name" property="departmentName"/>
+        <result column="diagnosis" property="diagnosis" jdbcType="VARCHAR"/>
+        <result column="order_type" property="orderType"/>
+        <result column="visit_time" property="visitTime"/>
+        <result column="discharge_time" property="dischargeTime"/>
+        <result column="stay_days" property="stayDays"/>
+        
+        <!-- 费用信息 -->
+        <result column="total_amount" property="totalAmount"/>
+        <result column="drug_amount" property="drugAmount"/>
+        <result column="treatment_amount" property="treatmentAmount"/>
+        <result column="service_amount" property="serviceAmount"/>
+        <result column="other_amount" property="otherAmount"/>
+        
+        <!-- 结算信息 -->
+        <result column="category_a_amount" property="categoryAAmount"/>
+        <result column="category_b_amount" property="categoryBAmount"/>
+        <result column="category_c_amount" property="categoryCAmount"/>
+        <result column="deductible" property="deductible"/>
+        <result column="reimbursement_ratio" property="reimbursementRatio"/>
+        <result column="reimbursable_amount" property="reimbursableAmount"/>
+        <result column="actual_reimbursement" property="actualReimbursement"/>
+        <result column="self_pay_amount" property="selfPayAmount"/>
+        <result column="settlement_no" property="settlementNo"/>
+        <result column="settlement_time" property="settlementTime"/>
+        <result column="approval_result" property="approvalResult"/>
+        <result column="approval_remark" property="approvalRemark"/>
+        <result column="reject_reason" property="rejectReason"/>
+        
+        <!-- 状态管理 -->
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, order_no, patient_id, patient_name, patient_id_card, hospital_id, hospital_name, hospital_level,
+        doctor_id, doctor_name, department_name, diagnosis, order_type, visit_time, discharge_time, stay_days,
+        total_amount, drug_amount, treatment_amount, service_amount, other_amount,
+        category_a_amount, category_b_amount, category_c_amount, deductible, reimbursement_ratio,
+        reimbursable_amount, actual_reimbursement, self_pay_amount, settlement_no, settlement_time,
+        approval_result, approval_remark, reject_reason, status, create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="Query_Condition">
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="patientId != null">
+                AND patient_id = #{patientId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    patient_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR hospital_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR doctor_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR department_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR diagnosis LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+    </sql>
+
+    <!-- 分页查询医疗订单列表 -->
+    <select id="getMedicalOrderList" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        <include refid="Query_Condition"/>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计医疗订单总数 -->
+    <select id="countMedicalOrders" resultType="int">
+        SELECT COUNT(*)
+        FROM medical_order
+        <include refid="Query_Condition"/>
+    </select>
+
+    <!-- 根据ID查询医疗订单 -->
+    <select id="getMedicalOrderById" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据订单号查询医疗订单 -->
+    <select id="getMedicalOrderByOrderNo" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE order_no = #{orderNo}
+    </select>
+
+    <!-- 根据结算单号查询医疗订单 -->
+    <select id="getMedicalOrderBySettlementNo" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE settlement_no = #{settlementNo}
+    </select>
+
+    <!-- 根据患者ID查询医疗订单列表 -->
+    <select id="getMedicalOrdersByPatientId" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE patient_id = #{patientId}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 新增医疗订单 -->
+    <insert id="addMedicalOrder" parameterType="org.neu.insurance.entity.MedicalOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO medical_order (
+            order_no, patient_id, patient_name, patient_id_card, hospital_id, hospital_name, hospital_level,
+            doctor_id, doctor_name, department_name, diagnosis, order_type, visit_time, discharge_time, stay_days,
+            total_amount, drug_amount, treatment_amount, service_amount, other_amount,
+            category_a_amount, category_b_amount, category_c_amount, deductible, reimbursement_ratio,
+            reimbursable_amount, actual_reimbursement, self_pay_amount, settlement_no, settlement_time,
+            approval_result, approval_remark, reject_reason, status, create_time, update_time, create_by, update_by, remark
+        ) VALUES (
+            #{orderNo}, #{patientId}, #{patientName}, #{patientIdCard}, #{hospitalId}, #{hospitalName}, #{hospitalLevel},
+            #{doctorId}, #{doctorName}, #{departmentName}, #{diagnosis,jdbcType=VARCHAR}, #{orderType}, #{visitTime}, #{dischargeTime}, #{stayDays},
+            #{totalAmount}, #{drugAmount}, #{treatmentAmount}, #{serviceAmount}, #{otherAmount},
+            #{categoryAAmount}, #{categoryBAmount}, #{categoryCAmount}, #{deductible}, #{reimbursementRatio},
+            #{reimbursableAmount}, #{actualReimbursement}, #{selfPayAmount}, #{settlementNo}, #{settlementTime},
+            #{approvalResult}, #{approvalRemark}, #{rejectReason}, #{status}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, #{remark}
+        )
+    </insert>
+
+    <!-- 更新医疗订单 -->
+    <update id="updateMedicalOrder" parameterType="org.neu.insurance.entity.MedicalOrder">
+        UPDATE medical_order
+        <set>
+            <if test="orderNo != null">order_no = #{orderNo},</if>
+            <if test="patientId != null">patient_id = #{patientId},</if>
+            <if test="patientName != null">patient_name = #{patientName},</if>
+            <if test="patientIdCard != null">patient_id_card = #{patientIdCard},</if>
+            <if test="hospitalId != null">hospital_id = #{hospitalId},</if>
+            <if test="hospitalName != null">hospital_name = #{hospitalName},</if>
+            <if test="hospitalLevel != null">hospital_level = #{hospitalLevel},</if>
+            <if test="doctorId != null">doctor_id = #{doctorId},</if>
+            <if test="doctorName != null">doctor_name = #{doctorName},</if>
+            <if test="departmentName != null">department_name = #{departmentName},</if>
+            <if test="diagnosis != null">diagnosis = #{diagnosis},</if>
+            <if test="orderType != null">order_type = #{orderType},</if>
+            <if test="visitTime != null">visit_time = #{visitTime},</if>
+            <if test="dischargeTime != null">discharge_time = #{dischargeTime},</if>
+            <if test="stayDays != null">stay_days = #{stayDays},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="drugAmount != null">drug_amount = #{drugAmount},</if>
+            <if test="treatmentAmount != null">treatment_amount = #{treatmentAmount},</if>
+            <if test="serviceAmount != null">service_amount = #{serviceAmount},</if>
+            <if test="otherAmount != null">other_amount = #{otherAmount},</if>
+            <if test="categoryAAmount != null">category_a_amount = #{categoryAAmount},</if>
+            <if test="categoryBAmount != null">category_b_amount = #{categoryBAmount},</if>
+            <if test="categoryCAmount != null">category_c_amount = #{categoryCAmount},</if>
+            <if test="deductible != null">deductible = #{deductible},</if>
+            <if test="reimbursementRatio != null">reimbursement_ratio = #{reimbursementRatio},</if>
+            <if test="reimbursableAmount != null">reimbursable_amount = #{reimbursableAmount},</if>
+            <if test="actualReimbursement != null">actual_reimbursement = #{actualReimbursement},</if>
+            <if test="selfPayAmount != null">self_pay_amount = #{selfPayAmount},</if>
+            <if test="settlementNo != null">settlement_no = #{settlementNo},</if>
+            <if test="settlementTime != null">settlement_time = #{settlementTime},</if>
+            <if test="approvalResult != null">approval_result = #{approvalResult},</if>
+            <if test="approvalRemark != null">approval_remark = #{approvalRemark},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除医疗订单 -->
+    <delete id="deleteMedicalOrder">
+        DELETE FROM medical_order WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除医疗订单 -->
+    <delete id="batchDeleteMedicalOrder">
+        DELETE FROM medical_order WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据状态查询医疗订单列表 -->
+    <select id="getMedicalOrdersByStatus" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE status = #{status}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据科室查询医疗订单列表 -->
+    <select id="getMedicalOrdersByDepartment" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE department_name = #{department}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据医生查询医疗订单列表 -->
+    <select id="getMedicalOrdersByDoctor" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE doctor_id = #{doctorId}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据日期范围查询医疗订单列表 -->
+    <select id="getMedicalOrdersByDateRange" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE visit_time BETWEEN #{startDate} AND #{endDate}
+        ORDER BY visit_time DESC
+    </select>
+
+    <!-- 根据金额范围查询医疗订单列表 -->
+    <select id="getMedicalOrdersByAmountRange" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE total_amount BETWEEN #{minAmount} AND #{maxAmount}
+        ORDER BY total_amount DESC
+    </select>
+
+    <!-- 根据结算状态查询订单列表 -->
+    <select id="getOrdersBySettlementStatus" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE status = #{status}
+        ORDER BY settlement_time DESC
+    </select>
+
+    <!-- 根据结算日期范围查询订单列表 -->
+    <select id="getOrdersBySettlementDateRange" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE settlement_time BETWEEN #{startDate} AND #{endDate}
+        ORDER BY settlement_time DESC
+    </select>
+
+    <!-- 根据报销金额范围查询订单列表 -->
+    <select id="getOrdersByReimbursementAmountRange" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE reimbursable_amount BETWEEN #{minAmount} AND #{maxAmount}
+        ORDER BY reimbursable_amount DESC
+    </select>
+
+    <!-- 获取所有订单状态 -->
+    <select id="getAllOrderStatuses" resultType="string">
+        SELECT DISTINCT status FROM medical_order ORDER BY status
+    </select>
+
+    <!-- 获取所有科室 -->
+    <select id="getAllDepartments" resultType="string">
+        SELECT DISTINCT department_name FROM medical_order WHERE department_name IS NOT NULL ORDER BY department_name
+    </select>
+
+    <!-- 获取所有结算状态 -->
+    <select id="getAllSettlementStatuses" resultType="string">
+        SELECT DISTINCT status FROM medical_order WHERE status IN (1,2,3,4,5,0) ORDER BY status
+    </select>
+
+    <!-- 计算订单总金额 -->
+    <select id="calculateOrderAmount" resultType="double">
+        SELECT COALESCE(SUM(total_amount), 0) FROM medical_order WHERE id = #{orderId}
+    </select>
+
+    <!-- 获取订单统计信息 -->
+    <select id="getOrderStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalOrders,
+            COUNT(CASE WHEN status = 1 THEN 1 END) as pendingOrders,
+            COUNT(CASE WHEN status = 2 THEN 1 END) as settledOrders,
+            COUNT(CASE WHEN status = 3 THEN 1 END) as paidOrders,
+            COUNT(CASE WHEN status = 0 THEN 1 END) as cancelledOrders,
+            COALESCE(SUM(total_amount), 0) as totalAmount,
+            COALESCE(AVG(total_amount), 0) as avgAmount
+        FROM medical_order
+    </select>
+
+
+
+    <!-- 获取结算统计信息 -->
+    <select id="getSettlementStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalOrders,
+            COUNT(CASE WHEN status = 2 THEN 1 END) as settledOrders,
+            COUNT(CASE WHEN status = 3 THEN 1 END) as paidOrders,
+            COALESCE(SUM(total_amount), 0) as totalAmount,
+            COALESCE(SUM(reimbursable_amount), 0) as totalReimbursement,
+            COALESCE(SUM(self_pay_amount), 0) as totalSelfPay
+        FROM medical_order
+        <where>
+            <if test="startDate != null and startDate != ''">
+                AND settlement_time >= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND settlement_time &lt;= #{endDate}
+            </if>
+            <if test="hospitalId != null">
+                AND hospital_id = #{hospitalId}
+            </if>
+        </where>
+    </select>
+
+    <!-- 统计患者订单总数 -->
+    <select id="countMedicalOrdersByPatientId" resultType="int">
+        SELECT COUNT(*) FROM medical_order WHERE patient_id = #{patientId}
+    </select>
+
+    <!-- 获取患者订单历史 -->
+    <select id="getPatientOrderHistory" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE patient_id = #{patientId}
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 获取患者结算历史 -->
+    <select id="getPatientSettlementHistory" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        WHERE patient_id = #{patientId} AND status >= 2
+        ORDER BY settlement_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 检查订单号是否存在 -->
+    <select id="checkOrderNoExists" resultType="int">
+        SELECT COUNT(*) FROM medical_order WHERE order_no = #{orderNo}
+    </select>
+
+    <!-- 检查结算单号是否存在 -->
+    <select id="checkSettlementNoExists" resultType="int">
+        SELECT COUNT(*) FROM medical_order WHERE settlement_no = #{settlementNo}
+    </select>
+
+    <!-- 批量更新订单状态 -->
+    <update id="batchUpdateOrderStatus">
+        UPDATE medical_order 
+        SET status = #{status}, update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 批量更新结算状态 -->
+    <update id="batchUpdateSettlementStatus">
+        UPDATE medical_order 
+        SET status = #{status}, 
+            approval_result = #{approvalResult},
+            approval_remark = #{approvalRemark},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 多条件筛选订单列表 -->
+    <select id="getOrdersByFilter" resultMap="MedicalOrderResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM medical_order
+        <where>
+        <if test="reportType != null and reportType != ''">
+            AND order_type = #{reportType}
+        </if>
+        <if test="department != null and department != ''">
+            AND department_name = #{department}
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="startDate != null">
+            AND settlement_time &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND settlement_time &lt;= #{endDate}
+        </if>
+        </where>
+    ORDER BY settlement_time DESC
+    </select>
+
+</mapper> 

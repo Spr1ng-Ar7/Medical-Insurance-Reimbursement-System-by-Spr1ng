@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.AdminRoleMapper">
+
+    <!-- 查询管理员的所有角色 -->
+    <select id="selectAdminRoles" resultType="org.neu.insurance.entity.Role">
+        SELECT r.* 
+        FROM role r
+        INNER JOIN admin_role ar ON r.id = ar.role_id
+        WHERE ar.admin_id = #{adminId}
+        AND r.status = 1
+        ORDER BY r.sort_order
+    </select>
+    
+    <!-- 删除管理员的所有角色关联 -->
+    <delete id="deleteAdminRoles">
+        DELETE FROM admin_role 
+        WHERE admin_id = #{adminId}
+    </delete>
+    
+    <!-- 批量插入管理员角色关联 -->
+    <insert id="insertAdminRoles">
+        INSERT INTO admin_role (admin_id, role_id, create_time) VALUES
+        <foreach collection="roleIds" item="roleId" separator=",">
+            (#{adminId}, #{roleId}, NOW())
+        </foreach>
+    </insert>
+
+</mapper> 

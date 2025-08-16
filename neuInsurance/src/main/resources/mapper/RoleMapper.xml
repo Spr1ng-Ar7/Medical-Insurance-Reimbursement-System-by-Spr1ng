@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.RoleMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.Role">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="role_code" property="roleCode" jdbcType="VARCHAR"/>
+        <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, role_code, role_name, description, status, sort_order, 
+        create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <!-- 根据ID查询角色 -->
+    <select id="selectRoleById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM role WHERE id = #{id}
+    </select>
+    
+    <!-- 根据ID列表批量查询角色 -->
+    <select id="selectRolesByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM role WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    
+    <!-- 分页查询角色列表 -->
+    <select id="selectRoleList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND role_code LIKE CONCAT('%', #{roleCode}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    
+    <!-- 统计角色总数 -->
+    <select id="countRoles" resultType="int">
+        SELECT COUNT(*)
+        FROM role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND role_code LIKE CONCAT('%', #{roleCode}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+    
+    <!-- 查询所有有效角色 -->
+    <select id="selectAllRoles" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM role 
+        WHERE status = 1 
+        ORDER BY sort_order ASC, create_time DESC
+    </select>
+    
+    <!-- 新增角色 -->
+    <insert id="insertRole" parameterType="org.neu.insurance.dto.RoleDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO role (
+            role_code, role_name, description, status, sort_order, 
+            create_time, update_time, create_by, update_by, remark
+        ) VALUES (
+            #{roleCode}, #{roleName}, #{description}, #{status}, #{sortOrder}, 
+            NOW(), NOW(), #{createBy}, #{updateBy}, #{remark}
+        )
+    </insert>
+    
+    <!-- 更新角色 -->
+    <update id="updateRole" parameterType="org.neu.insurance.dto.RoleDTO">
+        UPDATE role SET
+            role_code = #{roleCode},
+            role_name = #{roleName},
+            description = #{description},
+            status = #{status},
+            sort_order = #{sortOrder},
+            update_time = NOW(),
+            update_by = #{updateBy},
+            remark = #{remark}
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 删除角色 -->
+    <delete id="deleteRoleById" parameterType="long">
+        DELETE FROM role WHERE id = #{id}
+    </delete>
+    
+    <!-- 批量删除角色 -->
+    <delete id="batchDeleteRoles">
+        DELETE FROM role WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <!-- 更新角色状态 -->
+    <update id="updateRoleStatus">
+        UPDATE role SET status = #{status}, update_time = NOW() WHERE id = #{id}
+    </update>
+    
+    <!-- 检查角色编码是否存在 -->
+    <select id="countByRoleCode" resultType="int">
+        SELECT COUNT(*) FROM role 
+        WHERE role_code = #{roleCode}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+    
+    <!-- 删除角色权限关联 -->
+    <delete id="deleteRolePermissions" parameterType="long">
+        DELETE FROM role_permission WHERE role_id = #{roleId}
+    </delete>
+    
+    <!-- 批量插入角色权限关联 -->
+    <insert id="insertRolePermissions">
+        INSERT INTO role_permission (role_id, permission_id, create_time) VALUES
+        <foreach collection="permissionIds" item="permissionId" separator=",">
+            (#{roleId}, #{permissionId}, NOW())
+        </foreach>
+    </insert>
+    
+    <!-- 查询角色权限ID列表 -->
+    <select id="selectRolePermissionIds" parameterType="long" resultType="long">
+        SELECT permission_id FROM role_permission WHERE role_id = #{roleId}
+    </select>
+
+</mapper> 

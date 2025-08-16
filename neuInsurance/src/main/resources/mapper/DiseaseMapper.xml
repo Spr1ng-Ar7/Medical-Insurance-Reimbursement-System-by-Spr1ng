@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.DiseaseMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.Disease">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="disease_code" property="diseaseCode" jdbcType="VARCHAR"/>
+        <result column="national_code" property="nationalCode" jdbcType="VARCHAR"/>
+        <result column="disease_name" property="diseaseName" jdbcType="VARCHAR"/>
+        <result column="english_name" property="englishName" jdbcType="VARCHAR"/>
+        <result column="disease_type" property="diseaseType" jdbcType="VARCHAR"/>
+        <result column="icd_code" property="icdCode" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="symptoms" property="symptoms" jdbcType="VARCHAR"/>
+        <result column="treatment" property="treatment" jdbcType="VARCHAR"/>
+        <result column="prevention" property="prevention" jdbcType="VARCHAR"/>
+        <result column="severity" property="severity" jdbcType="VARCHAR"/>
+        <result column="contagious" property="contagious" jdbcType="INTEGER"/>
+        <result column="chronic" property="chronic" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, disease_code, national_code, disease_name, english_name, disease_type, icd_code,
+        description, symptoms, treatment, prevention, severity, contagious, chronic,
+        status, create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <!-- 根据条件分页查询疾病列表 -->
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        <where>
+            <if test="diseaseName != null and diseaseName != ''">
+                AND disease_name LIKE CONCAT('%', #{diseaseName}, '%')
+            </if>
+            <if test="diseaseCode != null and diseaseCode != ''">
+                AND disease_code = #{diseaseCode}
+            </if>
+            <if test="diseaseType != null and diseaseType != ''">
+                AND disease_type = #{diseaseType}
+            </if>
+            <if test="icdCode != null and icdCode != ''">
+                AND icd_code = #{icdCode}
+            </if>
+            <if test="severity != null and severity != ''">
+                AND severity = #{severity}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据条件统计疾病总数 -->
+    <select id="countByCondition" resultType="int">
+        SELECT COUNT(*)
+        FROM disease
+        <where>
+            <if test="diseaseName != null and diseaseName != ''">
+                AND disease_name LIKE CONCAT('%', #{diseaseName}, '%')
+            </if>
+            <if test="diseaseCode != null and diseaseCode != ''">
+                AND disease_code = #{diseaseCode}
+            </if>
+            <if test="diseaseType != null and diseaseType != ''">
+                AND disease_type = #{diseaseType}
+            </if>
+            <if test="icdCode != null and icdCode != ''">
+                AND icd_code = #{icdCode}
+            </if>
+            <if test="severity != null and severity != ''">
+                AND severity = #{severity}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询疾病 -->
+    <select id="selectById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据疾病编码查询疾病 -->
+    <select id="selectByDiseaseCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE disease_code = #{diseaseCode}
+    </select>
+
+    <!-- 根据国家编码查询疾病 -->
+    <select id="selectByNationalCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE national_code = #{nationalCode}
+    </select>
+
+    <!-- 根据ICD编码查询疾病 -->
+    <select id="selectByIcdCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE icd_code = #{icdCode}
+    </select>
+
+    <!-- 新增疾病 -->
+    <insert id="insert" parameterType="org.neu.insurance.entity.Disease" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO disease (
+            disease_code, national_code, disease_name, english_name, disease_type, icd_code,
+            description, symptoms, treatment, prevention, severity, contagious, chronic,
+            status, create_time, update_time, create_by, update_by, remark
+        ) VALUES (
+            #{diseaseCode}, #{nationalCode}, #{diseaseName}, #{englishName}, #{diseaseType}, #{icdCode},
+            #{description}, #{symptoms}, #{treatment}, #{prevention}, #{severity}, #{contagious}, #{chronic},
+            #{status}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, #{remark}
+        )
+    </insert>
+
+    <!-- 更新疾病 -->
+    <update id="update" parameterType="org.neu.insurance.entity.Disease">
+        UPDATE disease
+        <set>
+            <if test="diseaseCode != null">disease_code = #{diseaseCode},</if>
+            <if test="nationalCode != null">national_code = #{nationalCode},</if>
+            <if test="diseaseName != null">disease_name = #{diseaseName},</if>
+            <if test="englishName != null">english_name = #{englishName},</if>
+            <if test="diseaseType != null">disease_type = #{diseaseType},</if>
+            <if test="icdCode != null">icd_code = #{icdCode},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="symptoms != null">symptoms = #{symptoms},</if>
+            <if test="treatment != null">treatment = #{treatment},</if>
+            <if test="prevention != null">prevention = #{prevention},</if>
+            <if test="severity != null">severity = #{severity},</if>
+            <if test="contagious != null">contagious = #{contagious},</if>
+            <if test="chronic != null">chronic = #{chronic},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除疾病 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM disease WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除疾病 -->
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM disease WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据疾病类型查询疾病列表 -->
+    <select id="selectByDiseaseType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE disease_type = #{diseaseType}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据严重程度查询疾病列表 -->
+    <select id="selectBySeverity" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE severity = #{severity}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据是否传染查询疾病列表 -->
+    <select id="selectByContagious" parameterType="int" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE contagious = #{contagious}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据是否慢性病查询疾病列表 -->
+    <select id="selectByChronic" parameterType="int" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM disease
+        WHERE chronic = #{chronic}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取所有疾病类型 -->
+    <select id="selectAllDiseaseTypes" resultType="string">
+        SELECT DISTINCT disease_type 
+        FROM disease 
+        WHERE disease_type IS NOT NULL AND disease_type != ''
+        ORDER BY disease_type
+    </select>
+
+    <!-- 获取所有严重程度 -->
+    <select id="selectAllSeverities" resultType="string">
+        SELECT DISTINCT severity 
+        FROM disease 
+        WHERE severity IS NOT NULL AND severity != ''
+        ORDER BY severity
+    </select>
+
+    <!-- 检查疾病编码是否存在 -->
+    <select id="countByDiseaseCode" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM disease WHERE disease_code = #{diseaseCode}
+    </select>
+
+    <!-- 检查国家编码是否存在 -->
+    <select id="countByNationalCode" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM disease WHERE national_code = #{nationalCode}
+    </select>
+
+    <!-- 检查ICD编码是否存在 -->
+    <select id="countByIcdCode" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM disease WHERE icd_code = #{icdCode}
+    </select>
+
+</mapper> 

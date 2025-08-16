@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.PatientMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.Patient">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="patient_id" property="patientId" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="VARCHAR"/>
+        <result column="birth_date" property="birthDate" jdbcType="DATE"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="insurance_type" property="insuranceType" jdbcType="VARCHAR"/>
+        <result column="insurance_number" property="insuranceNumber" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, patient_id, name, id_card, gender, birth_date, phone, address,
+        insurance_type, insurance_number, status, create_time, update_time, remark
+    </sql>
+
+    <!-- 根据条件分页查询患者列表 -->
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="patientId != null and patientId != ''">
+                AND patient_id = #{patientId}
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND id_card = #{idCard}
+            </if>
+            <if test="insuranceType != null and insuranceType != ''">
+                AND insurance_type = #{insuranceType}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 根据条件统计患者总数 -->
+    <select id="countByCondition" resultType="int">
+        SELECT COUNT(*)
+        FROM patient
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="patientId != null and patientId != ''">
+                AND patient_id = #{patientId}
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND id_card = #{idCard}
+            </if>
+            <if test="insuranceType != null and insuranceType != ''">
+                AND insurance_type = #{insuranceType}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询患者 -->
+    <select id="selectById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据患者编号查询患者 -->
+    <select id="selectByPatientId" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE patient_id = #{patientId}
+    </select>
+
+    <!-- 根据身份证号查询患者 -->
+    <select id="selectByIdCard" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE id_card = #{idCard}
+    </select>
+
+    <!-- 根据医保号查询患者 -->
+    <select id="selectByInsuranceNumber" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE insurance_number = #{insuranceNumber}
+    </select>
+
+    <!-- 新增患者 -->
+    <insert id="insert" parameterType="org.neu.insurance.entity.Patient" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO patient (
+            patient_id, name, id_card, gender, birth_date, phone, address,
+            insurance_type, insurance_number, status, create_time, update_time, remark
+        ) VALUES (
+            #{patientId}, #{name}, #{idCard}, #{gender}, #{birthDate}, #{phone}, #{address},
+            #{insuranceType}, #{insuranceNumber}, #{status}, #{createTime}, #{updateTime}, #{remark}
+        )
+    </insert>
+
+    <!-- 新增患者 - 使用DTO -->
+    <insert id="addPatientByDTO" parameterType="org.neu.insurance.dto.PatientCreateDTO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO patient (
+            patient_id, name, id_card, gender, birth_date, phone, address,
+            insurance_type, insurance_number, status, create_time, update_time, remark
+        ) VALUES (
+            #{patientId}, #{name}, #{idCard}, #{gender}, #{birthDate}, #{phone}, #{address},
+            #{insuranceType}, #{insuranceNumber}, #{status}, NOW(), NOW(), #{remark}
+        )
+    </insert>
+
+    <!-- 更新患者 -->
+    <update id="update" parameterType="org.neu.insurance.entity.Patient">
+        UPDATE patient
+        <set>
+            <if test="patientId != null">patient_id = #{patientId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="insuranceType != null">insurance_type = #{insuranceType},</if>
+            <if test="insuranceNumber != null">insurance_number = #{insuranceNumber},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除患者 -->
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM patient WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除患者 -->
+    <delete id="batchDelete" parameterType="list">
+        DELETE FROM patient WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据医保类型查询患者列表 -->
+    <select id="selectByInsuranceType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE insurance_type = #{insuranceType}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据性别查询患者列表 -->
+    <select id="selectByGender" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE gender = #{gender}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取所有医保类型 -->
+    <select id="selectAllInsuranceTypes" resultType="string">
+        SELECT DISTINCT insurance_type 
+        FROM patient 
+        WHERE insurance_type IS NOT NULL AND insurance_type != ''
+        ORDER BY insurance_type
+    </select>
+
+    <!-- 检查患者编号是否存在 -->
+    <select id="countByPatientId" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM patient WHERE patient_id = #{patientId}
+    </select>
+
+    <!-- 检查身份证号是否存在 -->
+    <select id="countByIdCard" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM patient WHERE id_card = #{idCard}
+    </select>
+
+    <!-- 检查医保号是否存在 -->
+    <select id="countByInsuranceNumber" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM patient WHERE insurance_number = #{insuranceNumber}
+    </select>
+
+    <!-- 根据身份证号查询患者 -->
+    <select id="getPatientByIdCard" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE id_card = #{idCard}
+    </select>
+
+    <!-- 根据医保卡号查询患者 -->
+    <select id="getPatientByInsuranceCard" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE insurance_number = #{insuranceCard}
+    </select>
+
+    <!-- 根据手机号查询患者 -->
+    <select id="getPatientByPhone" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE phone = #{phone}
+    </select>
+
+    <!-- 新增患者 -->
+    <insert id="addPatient" parameterType="org.neu.insurance.entity.Patient" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO patient (
+            patient_id, name, id_card, gender, birth_date, phone, address,
+            insurance_type, insurance_number, status, create_time, update_time, remark
+        ) VALUES (
+            #{patientId}, #{name}, #{idCard}, #{gender}, #{birthDate}, #{phone}, #{address},
+            #{insuranceType}, #{insuranceNumber}, #{status}, NOW(), NOW(), #{remark}
+        )
+    </insert>
+
+    <!-- 更新患者信息 -->
+    <update id="updatePatient" parameterType="org.neu.insurance.entity.Patient">
+        UPDATE patient
+        <set>
+            <if test="patientId != null">patient_id = #{patientId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="insuranceType != null">insurance_type = #{insuranceType},</if>
+            <if test="insuranceNumber != null">insurance_number = #{insuranceNumber},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除患者 -->
+    <delete id="deletePatient" parameterType="long">
+        DELETE FROM patient WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除患者 -->
+    <delete id="batchDeletePatient" parameterType="list">
+        DELETE FROM patient WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据姓名查询患者列表 -->
+    <select id="getPatientsByName" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据医保类型查询患者列表 -->
+    <select id="getPatientsByInsuranceType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE insurance_type = #{insuranceType}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据年龄段查询患者列表 -->
+    <select id="getPatientsByAgeRange" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) BETWEEN #{minAge} AND #{maxAge}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据性别查询患者列表 -->
+    <select id="getPatientsByGender" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE gender = #{gender}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据地区查询患者列表 -->
+    <select id="getPatientsByRegion" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE address LIKE CONCAT('%', #{region}, '%')
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 更新患者状态 -->
+    <update id="updateStatus">
+        UPDATE patient 
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 获取所有医保类型 -->
+    <select id="getAllInsuranceTypes" resultType="string">
+        SELECT DISTINCT insurance_type 
+        FROM patient 
+        WHERE insurance_type IS NOT NULL AND insurance_type != ''
+        ORDER BY insurance_type
+    </select>
+
+    <!-- 获取所有地区 -->
+    <select id="getAllRegions" resultType="string">
+        SELECT DISTINCT SUBSTRING_INDEX(address, '市', 1) as region
+        FROM patient 
+        WHERE address IS NOT NULL AND address != ''
+        ORDER BY region
+    </select>
+
+    <!-- 根据关键词搜索患者 -->
+    <select id="searchPatients" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        WHERE name LIKE CONCAT('%', #{keyword}, '%')
+           OR id_card LIKE CONCAT('%', #{keyword}, '%')
+           OR phone LIKE CONCAT('%', #{keyword}, '%')
+           OR insurance_number LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取患者统计信息 -->
+    <select id="getPatientStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalPatients,
+            COUNT(CASE WHEN gender = '男' THEN 1 END) as maleCount,
+            COUNT(CASE WHEN gender = '女' THEN 1 END) as femaleCount,
+            COUNT(CASE WHEN status = 1 THEN 1 END) as activeCount,
+            COUNT(CASE WHEN status = 0 THEN 1 END) as inactiveCount
+        FROM patient
+    </select>
+
+    <!-- 统计患者总数 -->
+    <select id="countPatients" resultType="int">
+        SELECT COUNT(*)
+        FROM patient
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND id_card = #{idCard}
+            </if>
+            <if test="insuranceType != null and insuranceType != ''">
+                AND insurance_type = #{insuranceType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%')
+                     OR id_card LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%')
+                     OR insurance_number LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 分页查询患者列表 -->
+    <select id="getPatientList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM patient
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="idCard != null and idCard != ''">
+                AND id_card = #{idCard}
+            </if>
+            <if test="insuranceType != null and insuranceType != ''">
+                AND insurance_type = #{insuranceType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%')
+                     OR id_card LIKE CONCAT('%', #{keyword}, '%')
+                     OR phone LIKE CONCAT('%', #{keyword}, '%')
+                     OR insurance_number LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+</mapper> 

@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.neu.insurance.mapper.DrugMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.neu.insurance.entity.Drug">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="drug_code" property="drugCode" jdbcType="VARCHAR"/>
+        <result column="drug_name" property="drugName" jdbcType="VARCHAR"/>
+        <result column="trade_name" property="tradeName" jdbcType="VARCHAR"/>
+        <result column="drug_type" property="drugType" jdbcType="VARCHAR"/>
+        <result column="self_pay_ratio" property="selfPayRatio" jdbcType="DECIMAL"/>
+        <result column="specification" property="specification" jdbcType="VARCHAR"/>
+        <result column="unit" property="unit" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+        <result column="manufacturer" property="manufacturer" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, drug_code, drug_name, trade_name, drug_type, self_pay_ratio, specification,
+        unit, price, manufacturer, status, create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <!-- 分页查询药品列表 -->
+    <select id="getDrugList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        <where>
+            AND status = 1
+            <if test="drugCode != null and drugCode != ''">
+                AND drug_code LIKE CONCAT('%', #{drugCode}, '%')
+            </if>
+            <if test="drugName != null and drugName != ''">
+                AND drug_name LIKE CONCAT('%', #{drugName}, '%')
+            </if>
+            <if test="drugType != null and drugType != ''">
+                AND drug_type = #{drugType}
+            </if>
+            <if test="manufacturer != null and manufacturer != ''">
+                AND manufacturer LIKE CONCAT('%', #{manufacturer}, '%')
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (drug_name LIKE CONCAT('%', #{keyword}, '%') 
+                     OR drug_code LIKE CONCAT('%', #{keyword}, '%')
+                     OR manufacturer LIKE CONCAT('%', #{manufacturer}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 统计药品总数 -->
+    <select id="countDrugs" resultType="int">
+        SELECT COUNT(*)
+        FROM drug
+        <where>
+            AND status = 1
+            <if test="drugCode != null and drugCode != ''">
+                AND drug_code LIKE CONCAT('%', #{drugCode}, '%')
+            </if>
+            <if test="drugName != null and drugName != ''">
+                AND drug_name LIKE CONCAT('%', #{drugName}, '%')
+            </if>
+            <if test="drugType != null and drugType != ''">
+                AND drug_type = #{drugType}
+            </if>
+            <if test="manufacturer != null and manufacturer != ''">
+                AND manufacturer LIKE CONCAT('%', #{manufacturer}, '%')
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (drug_name LIKE CONCAT('%', #{keyword}, '%') 
+                     OR drug_code LIKE CONCAT('%', #{keyword}, '%')
+                     OR manufacturer LIKE CONCAT('%', #{manufacturer}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 根据ID查询药品 -->
+    <select id="getDrugById" parameterType="long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE id = #{id} AND status = 1
+    </select>
+
+    <!-- 根据药品编码查询药品 -->
+    <select id="getDrugByCode" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE drug_code = #{drugCode} AND status = 1
+    </select>
+
+    <!-- 根据药品名称查询药品列表 -->
+    <select id="getDrugsByName" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE drug_name LIKE CONCAT('%', #{drugName}, '%') AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据药品类型查询药品列表 -->
+    <select id="getDrugsByType" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE drug_type = #{drugType} AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据生产厂家查询药品列表 -->
+    <select id="getDrugsByManufacturer" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE manufacturer LIKE CONCAT('%', #{manufacturer}, '%') AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 新增药品 -->
+    <insert id="addDrug" parameterType="org.neu.insurance.entity.Drug" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO drug (
+            drug_code, drug_name, 
+            <if test="tradeName != null">trade_name,</if>
+            drug_type, 
+            <if test="selfPayRatio != null">self_pay_ratio,</if>
+            <if test="specification != null">specification,</if>
+            <if test="unit != null">unit,</if>
+            <if test="price != null">price,</if>
+            manufacturer, status, create_time, update_time
+            <if test="createBy != null">, create_by</if>
+            <if test="updateBy != null">, update_by</if>
+            <if test="remark != null">, remark</if>
+        ) VALUES (
+            #{drugCode}, #{drugName},
+            <if test="tradeName != null">#{tradeName},</if>
+            #{drugType},
+            <if test="selfPayRatio != null">#{selfPayRatio},</if>
+            <if test="specification != null">#{specification},</if>
+            <if test="unit != null">#{unit},</if>
+            <if test="price != null">#{price},</if>
+            #{manufacturer}, #{status}, #{createTime}, #{updateTime}
+            <if test="createBy != null">, #{createBy}</if>
+            <if test="updateBy != null">, #{updateBy}</if>
+            <if test="remark != null">, #{remark}</if>
+        )
+    </insert>
+
+    <!-- 更新药品 -->
+    <update id="updateDrug" parameterType="org.neu.insurance.entity.Drug">
+        UPDATE drug
+        <set>
+            <if test="drugCode != null and drugCode != ''">drug_code = #{drugCode},</if>
+            <if test="drugName != null and drugName != ''">drug_name = #{drugName},</if>
+            <if test="tradeName != null">trade_name = #{tradeName},</if>
+            <if test="drugType != null and drugType != ''">drug_type = #{drugType},</if>
+            <if test="selfPayRatio != null">self_pay_ratio = #{selfPayRatio},</if>
+            <if test="specification != null">specification = #{specification},</if>
+            <if test="unit != null">unit = #{unit},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = #{updateTime},
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除药品 -->
+    <delete id="deleteDrug" parameterType="long">
+        DELETE FROM drug WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除药品 -->
+    <delete id="batchDeleteDrugs" parameterType="list">
+        DELETE FROM drug WHERE id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据自付比例范围查询药品 -->
+    <select id="getDrugsBySelfPayRatio" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE self_pay_ratio BETWEEN #{minRatio} AND #{maxRatio} AND status = 1
+        ORDER BY self_pay_ratio DESC
+    </select>
+
+    <!-- 根据价格范围查询药品 -->
+    <select id="getDrugsByPriceRange" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE price BETWEEN #{minPrice} AND #{maxPrice} AND status = 1
+        ORDER BY price ASC
+    </select>
+
+    <!-- 查询可报销的药品 -->
+    <select id="getReimbursableDrugs" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE self_pay_ratio &lt; 1.0 AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询不可报销的药品 -->
+    <select id="getNonReimbursableDrugs" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE self_pay_ratio &gt;= 1.0 AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 更新药品状态 -->
+    <update id="updateStatus">
+        UPDATE drug SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <!-- 获取所有药品类型 -->
+    <select id="getAllDrugTypes" resultType="string">
+        SELECT DISTINCT drug_type 
+        FROM drug 
+        WHERE drug_type IS NOT NULL AND drug_type != '' AND status = 1
+        ORDER BY drug_type
+    </select>
+
+    <!-- 获取所有生产厂家 -->
+    <select id="getAllManufacturers" resultType="string">
+        SELECT DISTINCT manufacturer 
+        FROM drug 
+        WHERE manufacturer IS NOT NULL AND manufacturer != '' AND status = 1
+        ORDER BY manufacturer
+    </select>
+
+    <!-- 根据关键词搜索药品 -->
+    <select id="searchDrugs" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE (drug_name LIKE CONCAT('%', #{keyword}, '%') 
+           OR drug_code LIKE CONCAT('%', #{keyword}, '%')
+           OR manufacturer LIKE CONCAT('%', #{keyword}, '%'))
+           AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取药品统计信息 -->
+    <select id="getDrugStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalDrugs,
+            COUNT(CASE WHEN status = 1 THEN 1 END) as activeDrugs,
+            COUNT(CASE WHEN status = 0 THEN 1 END) as inactiveDrugs,
+            COUNT(CASE WHEN self_pay_ratio &lt; 1.0 AND status = 1 THEN 1 END) as reimbursableDrugs,
+            COUNT(CASE WHEN self_pay_ratio &gt;= 1.0 AND status = 1 THEN 1 END) as nonReimbursableDrugs
+        FROM drug
+    </select>
+
+    <!-- 根据规格查询药品列表 -->
+    <select id="getDrugsBySpecification" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE specification LIKE CONCAT('%', #{specification}, '%') AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据单位查询药品列表 -->
+    <select id="getDrugsByUnit" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE unit = #{unit} AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取所有规格 -->
+    <select id="getAllSpecifications" resultType="string">
+        SELECT DISTINCT specification 
+        FROM drug 
+        WHERE specification IS NOT NULL AND specification != '' AND status = 1
+        ORDER BY specification
+    </select>
+
+    <!-- 获取所有单位 -->
+    <select id="getAllUnits" resultType="string">
+        SELECT DISTINCT unit 
+        FROM drug 
+        WHERE unit IS NOT NULL AND unit != '' AND status = 1
+        ORDER BY unit
+    </select>
+
+    <!-- 根据商品名查询药品列表 -->
+    <select id="getDrugsByTradeName" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE trade_name LIKE CONCAT('%', #{tradeName}, '%') AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据医保分类查询药品列表 -->
+    <select id="getDrugsByInsuranceCategory" parameterType="string" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE drug_type = #{category} AND status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取所有医保分类 -->
+    <select id="getAllInsuranceCategories" resultType="string">
+        SELECT DISTINCT drug_type 
+        FROM drug 
+        WHERE drug_type IS NOT NULL AND drug_type != '' AND status = 1
+        ORDER BY drug_type
+    </select>
+
+    <!-- 获取所有药品 -->
+    <select id="getAllDrugs" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM drug
+        WHERE status = 1
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 检查药品编码是否存在 -->
+    <select id="isDrugCodeExists" parameterType="string" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM drug WHERE drug_code = #{drugCode} AND status = 1
+    </select>
+    
+    <!-- 检查药品编码是否存在（排除指定ID） -->
+    <select id="isDrugCodeExistsExcludeId" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM drug 
+        WHERE drug_code = #{drugCode} AND id != #{excludeId} AND status = 1
+    </select>
+
+    <!-- 检查商品名是否存在 -->
+    <select id="isTradeNameExists" parameterType="string" resultType="boolean">
+        SELECT COUNT(*) &gt; 0 FROM drug WHERE trade_name = #{tradeName} AND status = 1
+    </select>
+
+</mapper> 

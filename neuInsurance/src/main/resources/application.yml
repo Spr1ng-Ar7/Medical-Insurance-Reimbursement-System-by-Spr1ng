@@ -1,0 +1,97 @@
+# 医保报销系统配置文件
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: neu-insurance
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/neuinsurance?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    
+  # 禁用Spring Session JDBC自动配置
+  session:
+    store-type: none
+    
+  # 禁用Spring Data JDBC自动配置（因为我们使用MyBatis）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration
+    
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org.neu.insurance.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置
+logging:
+  level:
+    org.neu.insurance: debug
+    # 移除Spring Security日志配置，因为已经移除了Spring Security依赖
+    # org.springframework.security: debug
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+
+# 医保系统配置
+insurance:
+  # 报销比例配置
+  reimbursement:
+    # 一级医院报销比例
+    level1: 0.90
+    # 二级医院报销比例  
+    level2: 0.80
+    # 三级医院报销比例
+    level3: 0.70
+  # 起付线配置
+  deductible:
+    level1: 200
+    level2: 400
+    level3: 600
+  # 封顶线配置
+  max-amount: 300000
+
+# OpenAPI 3.0 配置
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  packages-to-scan: org.neu.insurance.controller
+  paths-to-match: /**
+
+# Knife4j 配置
+knife4j:
+  enable: true
+  setting:
+    language: zh-CN
+    enable-swagger-models: true
+    enable-document-manage: true
+    swagger-model-name: 实体类列表
+  basic:
+    enable: false
