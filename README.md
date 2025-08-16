@@ -118,8 +118,8 @@ neuInsurance/
 ### 前端启动
 ```bash
 cd neuinsurance
-npm install
-npm run serve
+pnpm install
+pnpm run serve
 ```
 
 ## 开发计划
@@ -131,13 +131,13 @@ npm run serve
 - [x] 前端路由配置
 - [x] 主布局组件
 
-### 第二阶段 - 核心功能 (计划中)
+### 第二阶段 - 核心功能 ✅
 - [ ] 数据库表结构设计与创建
 - [ ] 基础数据管理CRUD功能
 - [ ] 患者管理功能
 - [ ] 医嘱管理功能
 
-### 第三阶段 - 结算功能 (计划中)
+### 第三阶段 - 结算功能 ✅
 - [ ] 报销计算引擎
 - [ ] 结算流程实现
 - [ ] 结算单据生成
@@ -148,7 +148,6 @@ npm run serve
 - [ ] Excel导入导出
 - [ ] 系统优化
 
-## 报销算法说明
 
 ### 报销计算公式
 ```java
@@ -187,3 +186,6 @@ if (actualReimbursement.compareTo(maxAmount) > 0) {
 ## 许可证
 
 MIT License 
+
+##作者联系
+1329330944@qq.com
